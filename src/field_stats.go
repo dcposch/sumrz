@@ -7,16 +7,18 @@ import (
 )
 
 func (s *FieldStats) init(){
+    s.NumStats.init()
     s.StrStats.init()
 }
 
 func (s *FieldStats) update(value string){
     if value == "" {
-        return
+        s.NumBlank++
+    } else {
+        s.NumNotBlank++
+        s.StrStats.update(value, s.NumNotBlank)
+        s.NumStats.update(value)
     }
-    s.NumNotBlank++
-    s.StrStats.update(value, s.NumNotBlank)
-    s.NumStats.update(value)
 }
 
 // Show a summary of the field
@@ -30,29 +32,42 @@ func (s *FieldStats) String() string {
     }
 
     // Multiline summary
-    var lines []string
-    s.maybeAddNumStats(&lines)
+    lines := []string{s.getHeaderLine()}
     topCounts := s.getTopCounts()
     totalTopCount := s.maybeShowTopCounts(&lines, topCounts)
     s.maybeAddSample(&lines, totalTopCount)
     return strings.Join(lines, "\n")
 }
 
-func (s *FieldStats) maybeAddNumStats(lines *[]string) {
-    if s.NumStats.NumValidNums == s.NumNotBlank {
-        *lines = append(*lines, s.NumStats.String())
-    } else if s.NumStats.NumValidNums > 0 {
-        str := fmt.Sprintf("%d/%d numeric: %s",
-            s.NumStats.NumValidNums,
-            s.NumNotBlank,
-            s.NumStats.String())
-        *lines = append(*lines, str)
+// Returns descriptions like "8 blanks, 10 text" or "all integers, min 3 max 8 avg 4.50000 stdev 0.50000" 
+func (s *FieldStats) getHeaderLine() string {
+    var parts []string
+    n := s.NumBlank + s.NumNotBlank
+    if s.NumBlank > 0 {
+        parts = append(parts, fmt.Sprintf("%d blanks", s.NumBlank))
     }
+    numText := s.NumNotBlank - s.NumStats.NumValidNums
+    if numText == n {
+        parts = append(parts, "all text")
+    } else if numText > 0 {
+        parts = append(parts, fmt.Sprintf("%d text", numText))
+    }
+    if s.NumStats.NumValidNums == n {
+        str := fmt.Sprintf("all %s",
+            s.NumStats.String())
+        parts = append(parts, str)
+    } else if s.NumStats.NumValidNums > 0 {
+        str := fmt.Sprintf("%d %s",
+            s.NumStats.NumValidNums,
+            s.NumStats.String())
+        parts = append(parts, str)
+    }
+    return strings.Join(parts, ", ")
 }
 
 func (s *FieldStats) maybeShowTopCounts(lines *[]string, topCounts []fieldCount) int64 {
     tc := topCounts[0].count
-    allCounts := len(topCounts) == len(s.StrStats.Counts)
+    allCounts := len(topCounts) == len(s.StrStats.Counts) && !s.StrStats.IsEstimate
     shouldShowTopN := tc > 10
     exactTopN := !s.StrStats.IsEstimate && shouldShowTopN
     goodEnoughEstimate := tc > (s.NumNotBlank / maxCounts) && shouldShowTopN
@@ -62,7 +77,7 @@ func (s *FieldStats) maybeShowTopCounts(lines *[]string, topCounts []fieldCount)
     } else if exactTopN {
         *lines = append(*lines, "Most common values:")
     } else if goodEnoughEstimate {
-        *lines = append(*lines, "Estimated most values. APPROXIMATE counts:")
+        *lines = append(*lines, "Estimated most common values. APPROXIMATE counts:")
     }
     totalTopCount := int64(0)
     if showCounts {

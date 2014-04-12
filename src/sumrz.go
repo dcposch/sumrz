@@ -1,6 +1,7 @@
 package main
 import (
     "encoding/csv"
+    "flag"
     "fmt"
     "io"
     "os"
@@ -8,13 +9,39 @@ import (
 )
 
 
-func readCsvAndComputeStats(reader io.Reader, stats *TableStats){
+func main() {
     //f,_ := os.Create("sumrz.prof")
     //pprof.StartCPUProfile(f)
     //defer pprof.StopCPUProfile()
 
+    var delim = '\t'
+    flag.Parse()
+    args := flag.Args()
+    if len(args) > 1 {
+        printUsageExit()
+    }
+    if len(args) == 1 {
+        if len(args[0]) != 1 {
+            printUsageExit()
+        }
+        delim = rune(args[0][0])
+    }
+
+    var stats TableStats
+    readCsvAndComputeStats(os.Stdin, &stats, delim)
+    fmt.Println(stats.String())
+}
+
+func printUsageExit() {
+    fmt.Fprint(os.Stderr, "Usage: sumrz < file.csv\n" +
+                          "   or: sumrz '\t' < file.txt")
+    os.Exit(1)
+}
+
+func readCsvAndComputeStats(reader io.Reader, stats *TableStats, delim rune){
     csvReader := csv.NewReader(reader)
-    csvReader.Comma = '|'
+    csvReader.LazyQuotes = true
+    csvReader.Comma = delim
     var err error
     lineNum := 0
     for {
@@ -39,11 +66,5 @@ func readCsvAndComputeStats(reader io.Reader, stats *TableStats){
     if(err != io.EOF){
         fmt.Fprintf(os.Stderr, "Failed on line %d: %v\n", lineNum, err)
     }
-}
-
-func main() {
-    var stats TableStats
-    readCsvAndComputeStats(os.Stdin, &stats)
-    fmt.Println(stats.String())
 }
 

@@ -13,7 +13,7 @@ func (s *TableStats) init(headers []string) error {
             return fmt.Errorf("Duplicate header '%s'", header)
         }
         stats := new(FieldStats)
-        stats.StrStats.init()
+        stats.init()
         s.Fields[header] = stats
     }
     return nil
@@ -44,15 +44,8 @@ func (s *TableStats) String() string {
             headerStr = "'"+header+"'"
         }
         fieldStr := s.Fields[header].String()
-        if strings.Contains(fieldStr, "\n") {
-            // Show a paragraph summary of this field
-            fieldStrs = append(fieldStrs, fmt.Sprintf("%s\n%s",
-                headerStr, fieldStr))
-        } else {
-            // Show a single-line summary of this field
-            fieldStrs = append(fieldStrs, fmt.Sprintf("%s %s",
-                headerStr, fieldStr))
-        }
+        fieldStrs = append(fieldStrs, fmt.Sprintf("%s %s",
+            headerStr, fieldStr))
     }
     return tableStr + "\n\n" + strings.Join(fieldStrs, "\n\n")
 }

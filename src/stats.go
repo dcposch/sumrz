@@ -13,6 +13,7 @@ type FieldStats struct {
     StrStats StringStats
     NumStats NumberStats
     NumNotBlank int64
+    NumBlank int64
 }
 
 // Stores stats relevant for non-numeric fields.

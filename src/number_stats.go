@@ -3,14 +3,24 @@ import (
     "fmt"
     "math"
     "strconv"
+    "strings"
 )
 
+func (s *NumberStats) init() {
+    s.Max = math.Inf(-1)
+    s.Min = math.Inf(1)
+}
+
 func (s *NumberStats) update(value string) {
-    f, err := strconv.ParseFloat(value, 64)
-    if err != nil && err != strconv.ErrRange {
+    cleanVal := strings.Replace(value, ",", "", -1)
+    f, err := strconv.ParseFloat(cleanVal, 64)
+    if err != nil {
         return
     }
-    _, err = strconv.Atoi(value)
+    if math.IsInf(f,0) || math.IsNaN(f) {
+        return
+    }
+    _, err = strconv.Atoi(cleanVal)
     if err != nil {
         // Value is not an integer
         s.IsFloat = true
@@ -25,7 +35,7 @@ func (s *NumberStats) update(value string) {
 func (s *NumberStats) String() string {
     var ret string
     if s.IsFloat {
-        ret = ""
+        ret = "real numbers, "
     } else {
         ret = "integers, "
     }
