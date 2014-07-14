@@ -50,7 +50,7 @@ func (s *NumberStats) String() string {
         }
     } else {
         avg := s.Sum / float64(s.NumValidNums)
-        stdev := math.Sqrt((s.SumSquares - avg*avg) / float64(s.NumValidNums))
+        stdev := math.Sqrt((s.SumSquares / float64(s.NumValidNums)) - avg*avg)
 
         if s.IsFloat {
             ret += fmt.Sprintf("min %f max %f avg %f stdev %f",
