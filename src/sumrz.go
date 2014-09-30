@@ -28,8 +28,13 @@ func main() {
     }
 
     var stats TableStats
-    readCsvAndComputeStats(os.Stdin, &stats, delim)
-    fmt.Println(stats.String())
+    err := readCsvAndComputeStats(os.Stdin, &stats, delim)
+    if err != nil {
+        fmt.Fprintln(os.Stderr, err)
+        os.Exit(1)
+    } else {
+        fmt.Println(stats.String())
+    }
 }
 
 func printUsageExit() {
@@ -38,7 +43,7 @@ func printUsageExit() {
     os.Exit(1)
 }
 
-func readCsvAndComputeStats(reader io.Reader, stats *TableStats, delim rune){
+func readCsvAndComputeStats(reader io.Reader, stats *TableStats, delim rune) error {
     csvReader := csv.NewReader(reader)
     csvReader.LazyQuotes = true
     csvReader.Comma = delim
@@ -63,8 +68,9 @@ func readCsvAndComputeStats(reader io.Reader, stats *TableStats, delim rune){
             break
         }
     }
-    if(err != io.EOF){
-        fmt.Fprintf(os.Stderr, "Failed on line %d: %v\n", lineNum, err)
+    if err != io.EOF {
+        return fmt.Errorf("Failed on line %d: %v\n", lineNum, err)
     }
+    return nil
 }
 

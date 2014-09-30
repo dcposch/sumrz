@@ -44,7 +44,7 @@ func (s *NumberStats) String() string {
         ret = "not numeric"
     } else if s.Min == s.Max {
         if s.IsFloat {
-            ret += fmt.Sprintf("always %f", s.Min)
+            ret += fmt.Sprintf("always %e", s.Min)
         } else {
             ret += fmt.Sprintf("integers, always %d", int64(s.Min))
         }
@@ -53,7 +53,7 @@ func (s *NumberStats) String() string {
         stdev := math.Sqrt((s.SumSquares / float64(s.NumValidNums)) - avg*avg)
 
         if s.IsFloat {
-            ret += fmt.Sprintf("min %f max %f avg %f stdev %f",
+            ret += fmt.Sprintf("min %e max %e avg %e stdev %e",
                 s.Min, s.Max, avg, stdev)
         } else {
             ret += fmt.Sprintf("min %d max %d avg %f stdev %f",

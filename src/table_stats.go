@@ -1,19 +1,21 @@
 package main
 import (
     "fmt"
+    "os"
     "strings"
 )
 
 func (s *TableStats) init(headers []string) error {
-    s.Headers = headers
+    s.Headers = make([]string, len(headers))
     s.Fields = make(map[string]*FieldStats)
-    for _,header := range(headers) {
+    for i,header := range(headers) {
         header = strings.TrimSpace(header)
         if _,ok := s.Fields[header]; ok {
-            return fmt.Errorf("Duplicate header '%s'", header)
+            fmt.Fprintf(os.Stderr, "Duplicate header '%s'\n", header)
         }
         stats := new(FieldStats)
         stats.init()
+        s.Headers[i] = header
         s.Fields[header] = stats
     }
     return nil
@@ -25,7 +27,10 @@ func (s *TableStats) update(values []string) error {
             len(values), len(s.Headers))
     }
     for i,header := range(s.Headers) {
-        s.Fields[header].update(values[i])
+        field := s.Fields[header]
+        if field != nil {
+            field.update(values[i])
+        }
     }
     s.NumRows++
     return nil
