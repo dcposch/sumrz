@@ -11,8 +11,14 @@ On Linux, Mac, or Cygwin:
 
     cp sumrz /usr/bin/
 
-## Examples
+#### Binaries
 
+You can download binaries for Linux, Mac, and Windows directly, they're in `bin`.
+
+By the magic of Go, they're staticly linked and should work with no dependencies.
+
+
+## Examples
 
 #### Nasdaq symbols
 
